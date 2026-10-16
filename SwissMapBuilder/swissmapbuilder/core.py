@@ -135,7 +135,8 @@ def status(root):
     downloads = Path(root)/"inputs"/"downloads.json"
     acquired = json.loads(downloads.read_text(encoding="utf-8"))["files"] if downloads.exists() else []
     for record in acquired:
-        path = Path(record["path"])
+        local = Path(root)/"inputs"/record["layer"]/record["asset"]
+        path = local if local.is_file() else Path(record["path"])
         issue = "checksum_only"
         if record["config_sha256"] != fingerprint(config):
             issue = "stale_config"
@@ -149,4 +150,29 @@ def status(root):
             if digest.hexdigest() != record["sha256"]:
                 issue = "changed_file"
         results.append({"layer": record["layer"], "path": str(path), "status": issue})
-    return {"project": config["name"], "inputs": results, "beamng_export_available": False}
+    normalized = {"status": "not_started"}
+    report_path = Path(root)/"reports"/"normalize_terrain.json"
+    if report_path.exists():
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        stage_status = report.get("status", "unknown")
+        if report.get("config_sha256") != fingerprint(config):
+            stage_status = "stale_config"
+        elif stage_status == "complete":
+            for output in report["outputs"]:
+                path = Path(root)/output["path"]
+                if not path.is_file():
+                    stage_status = "missing_output"
+                    break
+                digest = hashlib.sha256()
+                with path.open("rb") as stream:
+                    for chunk in iter(lambda: stream.read(1024*1024), b""):
+                        digest.update(chunk)
+                if digest.hexdigest() != output["sha256"]:
+                    stage_status = "changed_output"
+                    break
+            if stage_status == "complete" and any(r["layer"] == "terrain" and r["status"] != "checksum_only" for r in results):
+                stage_status = "inputs_changed"
+        normalized = {"status": stage_status, "missing_cells": report.get("missing_cells"),
+                      "report": str(report_path)}
+    return {"project": config["name"], "inputs": results,
+            "terrain_normalization": normalized, "beamng_export_available": False}

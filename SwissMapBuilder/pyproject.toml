@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "swissmapbuilder"
-version = "0.2.0"
+version = "0.3.0"
 description = "Reproducible Swiss geodata workspace for a future BeamNG map generator"
 requires-python = ">=3.10"
-dependencies = ["pyproj>=3.6,<4"]
+dependencies = ["pyproj>=3.6,<4", "rasterio>=1.4,<2", "numpy>=1.24,<3", "Pillow>=10,<13"]
 
 [project.scripts]
 swissmapbuilder = "swissmapbuilder.cli:main"

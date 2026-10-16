@@ -22,3 +22,10 @@ keinen Fahrtest. Bauwerke und Tiefgaragen dürfen bei unzureichenden Daten als u
 Lokale Kartenwahl mit zwei Klicks und verschiebbaren Eckpunkten, LV95-Speicherung,
 swisstopo-STAC-Suche für swissALTI3D und SWISSIMAGE, Prüfsummen-Downloads und Cache umgesetzt.
 Baselland-Adapter, GIS-Normalisierung und Export bleiben offen. Fahrtests erfolgen manuell durch Bruno.
+
+## Stand 0.3.0
+
+Universelle LV95-Geländenormalisierung mit Zuschnitt, NoData-Prüfung, Höhenübersicht und
+Quellenbericht umgesetzt. Ein gemeinsamer prepare-Befehl verbindet Download und Verarbeitung.
+Baselland-Adapter sowie BeamNG-Export bleiben offen. Nächste Stufe: Terrain-Export mit
+korrektem Maßstab, Orientierung und dokumentiertem Höhenbereich für manuelle Prüfung.

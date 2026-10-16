@@ -1,73 +1,93 @@
-# SwissMapBuilder 0.2.0
+# SwissMapBuilder 0.3.0
 
-Universeller lokaler Schweizer Geodaten-zu-BeamNG-Generator in Entwicklung.
-Keine feste Ortskarte, keine Tessiner Referenzrouten. Fahrtests führt Bruno manuell durch.
+Universeller, lokal ausführbarer Schweizer Geodaten-zu-BeamNG-Generator in Entwicklung.
+Freie Gebietsauswahl, keine feste Ortskarte. Entwicklung auf GitHub, Ausführung und große Daten lokal.
+Fahrtests übernimmt Bruno manuell.
 
-## Was jetzt funktioniert
+## Update von 0.2.0
 
-- Gebiet auf einer Karte durch zwei Klicks wählen; Eckpunkte anschließend verschieben.
-- LV95-Projekt mit eigenem Ursprung, Kachelplan und getrennten Datenordnern speichern.
-- swissALTI3D-Geländekacheln in 2 m oder 0,5 m suchen und herunterladen.
-- SWISSIMAGE-10-cm-Dateien suchen und herunterladen (Adapter vorhanden, noch kein Live-Download geprüft).
-- STAC-Seiten durchlaufen; pro räumlicher Kachel den neuesten passenden Aufnahmezeitpunkt wählen.
-- Originalmetadaten, Lizenzangabe, Datum, Höhenbezug und Herkunft aufbewahren.
-- Prüfsummen kontrollieren; vollständige Dateien im Cache weiterverwenden; beschädigte erneut laden.
-- Wiederaufnahme zwischen vollständigen Dateien. Abgebrochene einzelne Dateien werden erneut geladen.
+**[Anleitung mit Erhalt vorhandener Projekte und GitHub-Upload](docs/UPDATE_0.3.0.md)**
+Vorhandene Downloads müssen nicht neu geladen werden. Die neue Datei `Gelaende_vorbereiten.bat`
+führt Kachelsuche, Download/Cacheprüfung und Geländeaufbereitung für das gewählte Projekt aus.
 
-Noch keine spielbare BeamNG-Map. GIS-Zuschnitt, Gelände-/Straßengenerierung, Gebäude, Brücken,
-Tunnel, Markierungen, Vegetation und Export sind weitere Entwicklungsstufen.
-Rasterauflösung sagt nicht die Messgenauigkeit aus. Download-Prüfsummen ersetzen keine GIS-Abdeckungsprüfung.
+## Windows: neuer Einstieg
 
-## Windows: erster Start
+Python 3.10 oder neuer installieren; für die GIS-Bibliotheken empfiehlt sich 64-Bit-Python 3.12.
 
-Python 3.10 oder neuer installieren. `Start_MapBuilder.bat` im Ordner `SwissMapBuilder` doppelklicken.
-Es wird eine lokale Python-Umgebung eingerichtet und die Karte im Browser geöffnet.
-Internet ist für Installation, Kartenansicht und Geodaten nötig.
+1. `Start_MapBuilder.bat` doppelklicken: lokale Karte öffnet sich.
+2. Zwei gegenüberliegende Ecken anklicken, Eckpunkte verschieben, Projekt speichern.
+3. Kartenfenster schließen und den Server im Terminal mit Strg+C beenden.
+4. `Gelaende_vorbereiten.bat` doppelklicken. Bei mehreren gespeicherten Projekten Nummer wählen.
+5. Ergebnis unter `projects/PROJEKT/work/normalized/` ansehen.
 
-1. Zur gewünschten Stelle zoomen.
-2. Zwei gegenüberliegende Ecken anklicken; Eckpunkte bei Bedarf ziehen.
-3. Projektnamen eingeben und **Gebiet speichern** drücken. Mit etwa 1 km² beginnen.
-4. Kartenserver mit Strg+C beenden. Im Paketordner ein Terminal öffnen:
+Internet ist für Installation, Kartenansicht und neue Downloads nötig. Vorhandene Geländedaten
+können nach Installation der Abhängigkeiten mit `prepare ... --offline` verarbeitet werden.
 
-```powershell
-.venv\Scripts\python -m swissmapbuilder discover projects/meine_karte
-.venv\Scripts\python -m swissmapbuilder download projects/meine_karte
-.venv\Scripts\python -m swissmapbuilder status projects/meine_karte
-```
+## Stand
 
-Für feinere Geländedaten `discover ... --resolution 0.5` verwenden.
-Für Luftbilder beide Befehle mit `--layer orthophoto` ausführen. 10-cm-Luftbilder können sehr groß sein.
-`discover` lädt nur Metadaten; `download` lädt die vollständigen Kacheln. Standardlimit: 100 Dateien.
-Der Cache ist pro Projekt getrennt; erneutes `download` kontrolliert vorhandene Dateien.
-Eine Neu-Auswahl mit bestehendem Projektnamen überschreibt das Projekt nicht.
+- Kartenwahl und Speicherung als isoliertes LV95-Projekt.
+- swisstopo-STAC-Adapter: swissALTI3D in 2 m/0,5 m und SWISSIMAGE in 10 cm.
+- Downloads mit Prüfsummen, Metadaten und Cache; Fortsetzen zwischen vollständigen Dateien.
+- Automatischer Ablauf für jedes gespeicherte Gebiet: `prepare`.
+- Blockweises Zusammenfügen und Zuschnitt von swissALTI3D; Integritäts-, CRS-, Auflösungs- und
+  NoData-Prüfung; bestätigter LN02-Höhenbezug aus Quellmetadaten erforderlich.
+- Nordorientiertes Gelände-GeoTIFF, Höhenvorschau und Qualitätsbericht.
+- Ergebnisse werden nur bei vollständiger Rasterabdeckung veröffentlicht. Keine künstliche Lückenfüllung.
+- Erneuter Lauf verwendet unveränderte, erneut geprüfte Ergebnisse.
 
-## Terminal und Entwicklung
+**Noch kein BeamNG-Export.** Gebäude, Straßen, Tunnel, Brücken, Vegetation und Details fehlen.
+Die Vorschau ist eine Graustufen-Höhenübersicht, kein Luftbild und keine fertige 3D-Karte.
+Rasterauflösung ist nicht Messgenauigkeit. Der Verarbeitungsbericht dokumentiert den auf volle
+Rasterzellen gerundeten Ausschnitt. Höhen werden nicht zwischen Bezugssystemen umgerechnet.
+Gleichzeitige Verarbeitung desselben Projekts in mehreren Prozessen wird nicht unterstützt.
+
+## Terminal
+
+Im Ordner mit der BAT-Datei:
 
 ```powershell
 py -3 -m venv .venv
-.venv\Scripts\python -m pip install -e .
-.venv\Scripts\python -m swissmapbuilder ui
-.venv\Scripts\python -m unittest discover -s tests -v
+.\.venv\Scripts\python.exe -m pip install -e .
+.\.venv\Scripts\python.exe -m swissmapbuilder ui
+.\.venv\Scripts\python.exe -m swissmapbuilder prepare projects/meine_karte
 ```
 
-Alternativ funktioniert die LV95-Eingabe weiterhin:
-`python -m swissmapbuilder init projects/demo --name demo --bbox 2620000 1250000 2621000 1251000`.
+Nur vorhandene Downloads verarbeiten:
 
-GitHub-Actions-Konfiguration ist im Paket enthalten, aber wegen blockiertem GitHub-Schreibzugriff
-noch nicht auf GitHub installiert oder dort ausgeführt. Lokale Prüfergebnisse: `docs/VALIDATION.md`.
+```powershell
+.\.venv\Scripts\python.exe -m swissmapbuilder prepare projects/meine_karte --offline
+```
 
-## Nächste Stufen
+Einzelschritte bleiben verfügbar:
 
-1. Daten normalisieren: Zuschnitt, Abdeckung, NoData und Höhenbezug prüfen; BL-Provider ergänzen.
-2. Ersten BeamNG-Export mit Terrain und Gebäudekörpern erzeugen.
-3. Straßen und Kreuzungen, Fuß-/Velowege sowie getrennte Verkehrsebenen bauen.
-4. Brücken, Unterführungen und Tunnel mit Kollision und Durchfahrt ergänzen.
-5. Markierungen, Schilder, Haltestellen, Gleise, Vegetation, Fassaden und Gärten ergänzen.
-6. Lokale fortsetzbare Builds, technische Qualitätsprüfungen und manuelle Fahrtests.
+```powershell
+.\.venv\Scripts\python.exe -m swissmapbuilder discover projects/meine_karte
+.\.venv\Scripts\python.exe -m swissmapbuilder download projects/meine_karte
+.\.venv\Scripts\python.exe -m swissmapbuilder normalize projects/meine_karte
+.\.venv\Scripts\python.exe -m swissmapbuilder status projects/meine_karte
+```
 
-Das Quellenprojekt [magliasinaNG](https://github.com/wintrymichi/magliasinaNG) dient als Referenz.
-Dieser Stand übernimmt keinen Quellcode, keine Modelle oder Originaldaten daraus.
-Daten behalten ihre eigenen Nutzungsbedingungen. Provider-Metadaten stehen in `reports/acquire_*.json`.
-STAC-Dokumentation: https://docs.geo.admin.ch/download-data/stac-api/overview.html
+Feineres Gelände: `discover ... --resolution 0.5`. Luftbilder: `discover` und `download` jeweils mit
+`--layer orthophoto`. Luftbilder werden noch nicht normalisiert und sind für diesen Schritt nicht nötig.
+Standardlimit: 100 Downloaddateien, mit `--max-files` änderbar. Maximal 100 Millionen Geländerasterzellen.
+
+## Entwicklung
+
+```powershell
+python -m pip install -e .
+python -m unittest discover -s tests -v
+```
+
+[Prüfbericht](docs/VALIDATION.md) · [Entwicklungsplan](docs/ROADMAP.md) · [Architektur](docs/ARCHITECTURE.md)
+
+GitHub soll Programmcode, Dokumentation und Tests enthalten. Projekte, Downloads und Builds
+bleiben lokal; `.gitignore` schließt diese aus. GitHub Actions ist vorbereitet, wurde vom Assistenten
+aber noch nicht auf GitHub ausgeführt. Manuelle Browser-Uploads können Punktdateien auslassen.
+
+[magliasinaNG](https://github.com/wintrymichi/magliasinaNG) dient als technische Referenz.
+Dieser Stand übernimmt keinen Code, Modelle oder Original-Geodaten daraus. Geodaten behalten
+ihre eigenen Bedingungen; vollständige Katalogmetadaten liegen in `reports/acquire_*.json`.
 
 Kartenansicht: © OpenStreetMap contributors. Daten: © swisstopo.
+STAC: https://docs.geo.admin.ch/download-data/stac-api/overview.html
+Rasterverarbeitung: https://rasterio.readthedocs.io/en/stable/topics/reproject.html

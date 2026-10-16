@@ -1,6 +1,6 @@
 # Datenquellen und Prüfstatus
 
-Dies ist ein Quellenkatalog, keine Liste getesteter Download-Adapter.
+Dies ist der Quellenkatalog. Der swisstopo-STAC-Adapter ist für swissALTI3D mit echten Downloads getestet; SWISSIMAGE-Kachelsuche ebenfalls. Kantonale Adapter fehlen noch.
 
 | Quelle | Zweck | Noch zu prüfen |
 |---|---|---|

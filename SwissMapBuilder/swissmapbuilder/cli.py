@@ -31,9 +31,21 @@ def main(argv=None):
     down.add_argument("directory")
     down.add_argument("--layer", choices=["terrain", "orthophoto"], default="terrain")
     down.add_argument("--max-files", type=int, default=100)
+    norm = commands.add_parser("normalize", help="Gelände zusammenfügen, zuschneiden und prüfen")
+    norm.add_argument("directory")
+    prep = commands.add_parser("prepare", help="Gebiet automatisch bis zum geprüften Gelände verarbeiten")
+    prep.add_argument("directory", nargs="?")
+    prep.add_argument("--offline", action="store_true")
+    prep.add_argument("--max-files", type=int, default=100)
     args = parser.parse_args(argv)
     try:
-        if args.command == "ui":
+        if args.command == "normalize":
+            from .normalize import normalize
+            result = normalize(args.directory)
+        elif args.command == "prepare":
+            from .workflow import prepare
+            result = prepare(args.directory, args.offline, args.max_files)
+        elif args.command == "ui":
             from .ui import serve
             serve(args.directory)
             return 0
@@ -52,7 +64,16 @@ def main(argv=None):
             result = status(args.directory)
         else:
             result = register(args.directory, args.layer, args.file, args.source, args.license, args.date, args.confidence)
-        print(json.dumps(result, indent=2, ensure_ascii=False))
+        if args.command in ("normalize", "prepare"):
+            print(f"Fertig: {result['width']} × {result['height']} Zellen; keine Datenlücken.")
+            for output in result['outputs']:
+                print("  " + output['path'])
+        elif args.command == "discover":
+            print(f"Kachelplan gespeichert: {len(result['assets'])} Dateien; Download mit dem Befehl download starten.")
+        elif args.command == "download":
+            print(f"Dateiverzeichnis aktualisiert: {len(result['files'])} Einträge.")
+        else:
+            print(json.dumps(result, indent=2, ensure_ascii=False))
         return 0
     except (ValueError, OSError, KeyError, ImportError) as error:
         print(f"Fehler: {error}", file=sys.stderr)
