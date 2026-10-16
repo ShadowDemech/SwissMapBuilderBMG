@@ -132,4 +132,21 @@ def status(root):
             if digest.hexdigest() != record["sha256"]:
                 issue = "changed_file"
         results.append({"layer": record["layer"], "path": str(path), "status": issue})
+    downloads = Path(root)/"inputs"/"downloads.json"
+    acquired = json.loads(downloads.read_text(encoding="utf-8"))["files"] if downloads.exists() else []
+    for record in acquired:
+        path = Path(record["path"])
+        issue = "checksum_only"
+        if record["config_sha256"] != fingerprint(config):
+            issue = "stale_config"
+        elif not path.is_file():
+            issue = "missing_file"
+        else:
+            digest = hashlib.sha256()
+            with path.open("rb") as stream:
+                for chunk in iter(lambda: stream.read(1024*1024), b""):
+                    digest.update(chunk)
+            if digest.hexdigest() != record["sha256"]:
+                issue = "changed_file"
+        results.append({"layer": record["layer"], "path": str(path), "status": issue})
     return {"project": config["name"], "inputs": results, "beamng_export_available": False}

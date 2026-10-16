@@ -21,9 +21,29 @@ def main(argv=None):
     add.add_argument("--license", required=True)
     add.add_argument("--date", required=True, help="Aufnahmedatum YYYY-MM-DD; kein erfundenes Datum verwenden")
     add.add_argument("--confidence", choices=["measured", "detected", "inferred"], default="measured")
+    ui = commands.add_parser("ui", help="Lokale Kartenoberfläche öffnen")
+    ui.add_argument("--directory", default="projects")
+    find = commands.add_parser("discover", help="swisstopo-Kacheln suchen; noch kein Download")
+    find.add_argument("directory")
+    find.add_argument("--layer", choices=["terrain", "orthophoto"], default="terrain")
+    find.add_argument("--resolution", type=float)
+    down = commands.add_parser("download", help="Gefundene Kacheln herunterladen; Cache nutzen")
+    down.add_argument("directory")
+    down.add_argument("--layer", choices=["terrain", "orthophoto"], default="terrain")
+    down.add_argument("--max-files", type=int, default=100)
     args = parser.parse_args(argv)
     try:
-        if args.command == "init":
+        if args.command == "ui":
+            from .ui import serve
+            serve(args.directory)
+            return 0
+        elif args.command == "discover":
+            from .acquire import discover
+            result = discover(args.directory, args.layer, args.resolution if args.resolution is not None else (2.0 if args.layer == "terrain" else 0.1))
+        elif args.command == "download":
+            from .acquire import download
+            result = download(args.directory, args.layer, args.max_files)
+        elif args.command == "init":
             result = init(args.directory, args.name, args.bbox)
         elif args.command == "plan":
             result = plan(load(args.directory))
@@ -34,6 +54,6 @@ def main(argv=None):
             result = register(args.directory, args.layer, args.file, args.source, args.license, args.date, args.confidence)
         print(json.dumps(result, indent=2, ensure_ascii=False))
         return 0
-    except (ValueError, OSError, KeyError) as error:
+    except (ValueError, OSError, KeyError, ImportError) as error:
         print(f"Fehler: {error}", file=sys.stderr)
         return 1
